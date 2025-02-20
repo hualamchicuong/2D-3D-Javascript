@@ -22,15 +22,28 @@
     <select id="sectionSelect"></select>
 
     <!-- <div id="container"> -->
-
         <h2>2D Viewer</h2>
-        <svg id="viewer2D"></svg>
-        <div id="polygonInfo" style="margin-top: 10px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9;">
+        <div id="container2D">
+            <svg id="viewer2D"></svg>
+        
+            <div id="legendContainer">
+                <h2>Color Guide</h2>
+                <table id="legendTable">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Material</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="polygonInfo">
             <h3>Polygon Info</h3>
             <p>Click on a polygon to see details.</p>
         </div>
 
-    </div>
     <h2>3D Viewer</h2>
     <canvas id="viewer3D"></canvas>
 

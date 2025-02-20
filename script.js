@@ -27,7 +27,9 @@ document.addEventListener("DOMContentLoaded", async function() {
     
         const section = sections.find(s => s.sectionName === sectionName);
         if (!section) return;
-    
+
+        // if (!section.symbol && !section.symbolDescription) return;
+
         const width = 500, height = 500;
     
         const xExtent = d3.extent(section.polygons.flatMap(p => p.points2D.map(d => d.vertex[0])));
@@ -71,8 +73,6 @@ document.addEventListener("DOMContentLoaded", async function() {
                 .call(yAxis);
         }
 
-
-    
         // Choose polygon when user click
         svg.selectAll("polygon")
             .data(section.polygons)
@@ -89,8 +89,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                 // Show the information of that polygon
                 infoBox.html(`
                     <h3>Polygon Info</h3>
-                    <p><b>Symbol:</b> ${polygon.symbol}</p>
-                    <p><b>Symbol Description:</b> ${polygon.symbolDescription}</p>
+                    <p><b>Symbol:</b> ${polygon.symbol ?? "No data"}</p>
+                    <p><b>Symbol Description:</b> ${polygon.symbolDescription ?? "No data"}</p>
                 `);
             })
             .on("mouseout", function () {
@@ -211,6 +211,42 @@ document.addEventListener("DOMContentLoaded", async function() {
     
         animate();
     }
+
+    async function generateLegend() {
+        const dataUrl = "CS Example Data File.json"; // Đổi thành đường dẫn file JSON
+        const jsonData = await fetch(dataUrl).then(res => res.json());
+    
+        const sections = jsonData.polygonsBySection;
+        const legendTable = document.querySelector("#legendTable tbody");
+    
+        let materials = new Map();
+    
+        // Duyệt qua tất cả polygons để lấy màu sắc và mô tả vật liệu
+        sections.forEach(section => {
+            section.polygons.forEach(polygon => {
+                if (!materials.has(polygon.color)) {
+                    materials.set(polygon.color, polygon.symbolDescription ?? "Unknown Material");
+                }
+            });
+        });
+    
+        // Xóa nội dung cũ trước khi cập nhật mới
+        legendTable.innerHTML = "";
+    
+        // Thêm dữ liệu vào bảng
+        materials.forEach((description, color) => {
+            let row = document.createElement("tr");
+            row.innerHTML = `
+                <td style="background: #${color}; width: 50px;"></td>
+                <td>${description}</td>
+            `;
+            legendTable.appendChild(row);
+        });
+    }
+    
+    // Gọi hàm khi trang load
+    generateLegend();
+    
     
     draw3D(sections[0].sectionName);
 

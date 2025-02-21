@@ -48,9 +48,8 @@ label {
 }
 
 #viewer2D, #viewer3D {
-    width: 48%;
     height: 500px;
-    background: white;
+    /* background: white; */
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #ddd;
@@ -62,17 +61,29 @@ label {
 
 /* Định dạng SVG cho 2D */
 #viewer2D {
+    width: 50%;
     background: #ffffff;
     border: 1px solid #ddd;
 }
 
 /* Định dạng Three.js Canvas */
 #viewer3D {
-    /* display: flex;
+    width: 100%;
+    margin-bottom: 50px;
+    display: flex;
     justify-content: center;
-    align-items: center; */
+    align-items: flex-start;
     border: 1px solid #ddd;
     background: #ffffff;
+
+}
+
+#container3D{
+    display: flex;
+    align-items: flex-start; /* Căn top */
+    gap: 20px; /* Khoảng cách giữa 2D Viewer và Legend */
+    /* margin-top: 20px; */
+    justify-content: center;
 }
 
 

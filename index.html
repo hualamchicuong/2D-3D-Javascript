@@ -6,7 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2D & 3D Viewer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.173.0/build/three.module.js",
+                "three/examples/jsm/controls/OrbitControls.js": "https://unpkg.com/three@0.173.0/examples/jsm/controls/OrbitControls.js"
+            }
+        }
+        </script>
+
 
     <style>
         body { font-family: Arial, sans-serif; }
@@ -44,10 +54,15 @@
             <p>Click on a polygon to see details.</p>
         </div>
 
-    <h2>3D Viewer</h2>
-    <canvas id="viewer3D"></canvas>
+        <h2>3D Viewer</h2>
+        <div id="container3D">
+            <div id="viewer3D"></div>
+        </div>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="draw2d.js"></script>
+    <script type="module" src="draw3d.js"></script>
+        
+
     <link rel="stylesheet" href="style.css">
 
 </body>

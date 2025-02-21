@@ -19,7 +19,9 @@ document.addEventListener("DOMContentLoaded", async function() {
     // Xử lý vẽ khi chọn section
     sectionSelect.addEventListener("change", function() {
         draw2D(this.value);
+        draw3D(this.value);
     });
+
 
     function draw2D(sectionName) {
         const svg = d3.select("#viewer2D");
@@ -142,9 +144,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                     }
 
                     return new THREE.Vector3(
-                        point.vertex[0] / 100,  
-                        -point.vertex[1] / 100, 
-                        point.vertex[2] / 100   
+                        point.vertex[0] / 10,  
+                        -point.vertex[1] / 10, 
+                        point.vertex[2] / 10  
                     );
                 }).filter(v => v !== undefined); // Lọc ra các giá trị undefined
 
@@ -155,6 +157,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     
                 const geometry = new THREE.BufferGeometry();
                 const positions = new Float32Array(vertices.length * 3);
+                console.log(vertices);
     
                 vertices.forEach((v, i) => {
                     positions[i * 3] = v.x;
@@ -188,7 +191,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const material = new THREE.MeshStandardMaterial({ 
                     color: polygon.color, 
                     side: THREE.DoubleSide,
-                    wireframe: false 
+                    // wireframe: false 
                 });
     
                 const mesh = new THREE.Mesh(geometry, material);

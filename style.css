@@ -64,17 +64,23 @@ label {
     width: 50%;
     background: #ffffff;
     border: 1px solid #ddd;
+    justify-content: center;
+    align-items: flex-start;
+    height: 600px;
+
 }
 
 /* Định dạng Three.js Canvas */
 #viewer3D {
-    width: 65%;
+    width: 60%;
     margin-bottom: 50px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     border: 1px solid #ddd;
     background: #ffffff;
+    height: 100%;
+
 
 }
 

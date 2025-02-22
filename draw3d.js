@@ -1,65 +1,101 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
 
+function makeTextSprite(message, parameters) {
+  if (parameters === undefined) parameters = {};
+  const fontface = parameters.fontface || "Arial";
+  const fontsize = parameters.fontsize || 18;
+  const borderThickness = parameters.borderThickness || 4;
+  const borderColor = parameters.borderColor || { r: 0, g: 0, b: 0, a: 1.0 };
+  const backgroundColor = parameters.backgroundColor || { r: 255, g: 255, b: 255, a: 1.0 };
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = "Bold " + fontsize + "px " + fontface;
+
+  const metrics = context.measureText(message);
+  const textWidth = metrics.width;
+  canvas.width = textWidth + borderThickness * 2;
+  canvas.height = fontsize + borderThickness * 2;
+  context.font = "Bold " + fontsize + "px " + fontface; // Cập nhật lại font sau khi thay đổi kích thước canvas
+
+  context.fillStyle = "rgba(" + backgroundColor.r + "," + backgroundColor.g + "," + backgroundColor.b + "," + backgroundColor.a + ")";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + "," + borderColor.b + "," + borderColor.a + ")";
+  context.lineWidth = borderThickness;
+  context.strokeRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "rgba(0, 0, 0, 1.0)";
+  context.fillText(message, borderThickness, fontsize + borderThickness);
+
+  const texture = new THREE.Texture(canvas);
+  texture.needsUpdate = true;
+  const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+  const sprite = new THREE.Sprite(spriteMaterial);
+  sprite.scale.set(20, 10, 1.0); // Điều chỉnh kích thước nhãn
+  return sprite;
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
   const dataUrl = "CS Example Data File.json";
   const jsonData = await fetch(dataUrl).then(res => res.json());
   const sections = jsonData.polygonsBySection;
   const sectionSelect = document.getElementById("sectionSelect");
 
+  // Thêm Section vào dropdown
   sections.forEach(section => {
     let option = document.createElement("option");
     option.value = section.sectionName;
     option.textContent = section.sectionName;
   });
 
-  // Perform draw after choose section
+  // Vẽ khi đổi section
   sectionSelect.addEventListener("change", function () {
     draw3D(this.value);
   });
 
-  // Draw 3D for the first time (when access the website)
+  // Vẽ lần đầu (section đầu tiên)
   if (sections.length > 0) {
     draw3D(sections[0].sectionName);
   }
 
+
+
   function draw3D(sectionName) {
     const container = document.getElementById("viewer3D");
     container.innerHTML = "";
-
-    // Create scene
+  
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
-
-    // Create renderer
+  
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, 500);
     container.appendChild(renderer.domElement);
-
-    // Create camera
+  
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 500, 0.1, 5000);
-    camera.position.set(0, 100, 800);
+    camera.position.set(0, 200, 800);
     camera.lookAt(0, 0, 0);
-
-    // Add light
+  
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(100, 100, 100);
     scene.add(directionalLight);
-
-    // Find the chosen section
+  
     const section = sections.find(s => s.sectionName === sectionName);
     if (!section) {
       console.error("Section not found:", sectionName);
       return;
     }
-
-    const scaleFactor = 5; // Scale to zoom out the data
-    // Calc bouding box of polygons
-    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, minY = Infinity;
-
-    // Draw polygons from points3D
+  
+    const group = new THREE.Group();
+    scene.add(group);
+  
+    const scaleFactor = 5;
+  
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+  
     section.polygons.forEach(polygon => {
       if (!polygon.points3D || polygon.points3D.length < 3) {
         console.warn("Invalid polygon:", polygon);
@@ -70,25 +106,27 @@ document.addEventListener("DOMContentLoaded", async function () {
         const x = point.vertex[0] / scaleFactor;
         const y = -point.vertex[1] / scaleFactor;
         const z = point.vertex[2] / scaleFactor;
-        vertices.push(x, y, z);
-        // Update bounding box
+  
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
         if (z < minZ) minZ = z;
         if (z > maxZ) maxZ = z;
-        if (y < minY) minY = y;
+  
+        vertices.push(x, y, z);
       });
-      // Fan triangulation: (0,1,2), (0,2,3), ...
+  
       const indices = [];
       for (let i = 1; i < polygon.points3D.length - 1; i++) {
         indices.push(0, i, i + 1);
       }
+  
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
       geometry.setIndex(indices);
       geometry.computeVertexNormals();
-
-      // Add '#' to the polygon.color
+  
       let fillColor = polygon.color;
       if (fillColor && fillColor[0] !== "#") {
         fillColor = "#" + fillColor;
@@ -97,34 +135,82 @@ document.addEventListener("DOMContentLoaded", async function () {
         color: fillColor || "#cccccc",
         side: THREE.DoubleSide
       });
+  
       const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
+      group.add(mesh);
     });
-
-    // If polygon's data invalid, set bouding to default
-    if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minZ) || !isFinite(maxZ)) {
-      console.warn("No valid polygon data for bounding grid.");
-      minX = -50; maxX = 50; minZ = -50; maxZ = 50;
-      minY = 0;
+  
+    // if (section.boreholes && section.boreholes.length > 0) {
+    //   section.boreholes.forEach(b => {
+    //     const x = b.x / scaleFactor;
+    //     const z = 0;
+  
+    //     if (x < minX) minX = x;
+    //     if (x > maxX) maxX = x;
+    //     if (z < minZ) minZ = z;
+    //     if (z > maxZ) maxZ = z;
+  
+    //     const topY = b.elevation / scaleFactor;
+    //     const height = (b.depth || 10) / scaleFactor;
+    //     const bottomY = topY - height;
+    //     const centerY = (topY + bottomY) / 2;
+  
+    //     const radius = 2;
+    //     const radialSegments = 16;
+    //     const cylinderGeo = new THREE.CylinderGeometry(radius, radius, height, radialSegments);
+    //     const cylinderMat = new THREE.MeshStandardMaterial({ color: 0x0000ff });
+    //     const cylinder = new THREE.Mesh(cylinderGeo, cylinderMat);
+  
+    //     cylinder.position.set(x, centerY, z);
+    //     cylinder.rotation.x = -Math.PI / 2; // Dựng borehole đứng dọc
+    //     group.add(cylinder);
+    //   });
+    // }
+  
+    group.rotation.x = -Math.PI / 2;
+  
+    if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY) || !isFinite(minZ) || !isFinite(maxZ)) {
+      console.warn("No valid data for bounding grid.");
+      minX = -100; maxX = 100;
+      minZ = -100; maxZ = 100;
     }
-
-    // Calc grid base on bouding box
+  
+    const minZ_scene = -maxY;
+    const maxZ_scene = -minY;
     const gridWidth = maxX - minX;
-    const gridDepth = maxZ - minZ;
+    const gridDepth = maxZ_scene - minZ_scene;
     const gridSize = Math.max(gridWidth, gridDepth);
-    const gridDivisions = 10; // Divisions amout of the grid
-
-    // Create grid helper and locate it at the floor (minY) and the center is base on x and z.
+    const gridDivisions = 10;
+    const gridCenterX = (minX + maxX) / 2;
+    const gridCenterZ = (minZ_scene + maxZ_scene) / 2;
+  
     const gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x444444, 0x888888);
-    gridHelper.position.set((minX + maxX) / 2, minY, (minZ + maxZ) / 2);
+    gridHelper.position.set(gridCenterX, 0, gridCenterZ);
     scene.add(gridHelper);
-
-    // Add OrbitControls to zoom, rotate and pan
+  
+    // Thêm nhãn cho trục X và Z
+    const labelCount = gridDivisions + 1;
+    for (let i = 0; i < labelCount; i++) {
+      const x = minX + i * (maxX - minX) / gridDivisions;
+      const z = minZ_scene - 5;
+      const labelValue = (x * scaleFactor).toFixed(2);
+      const sprite = makeTextSprite(labelValue);
+      sprite.position.set(x, 0.1, z);
+      scene.add(sprite);
+    }
+    for (let i = 0; i < labelCount; i++) {
+      const z = minZ_scene + i * (maxZ_scene - minZ_scene) / gridDivisions;
+      const x = minX - 5;
+      const labelValue = (z * scaleFactor).toFixed(2);
+      const sprite = makeTextSprite(labelValue);
+      sprite.position.set(x, 0.1, z);
+      scene.add(sprite);
+    }
+  
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.update();
-
-    // Loop animation
+  
     function animate() {
       requestAnimationFrame(animate);
       controls.update();

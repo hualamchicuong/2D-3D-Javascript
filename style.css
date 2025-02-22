@@ -68,7 +68,7 @@ label {
 
 /* Định dạng Three.js Canvas */
 #viewer3D {
-    width: 100%;
+    width: 65%;
     margin-bottom: 50px;
     display: flex;
     justify-content: center;

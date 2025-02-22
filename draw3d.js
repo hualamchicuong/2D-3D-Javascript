@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Create camera
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 500, 0.1, 5000);
-    camera.position.set(0, 200, 500);
+    camera.position.set(0, 100, 800);
     camera.lookAt(0, 0, 0);
 
     // Add light
